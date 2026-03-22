@@ -1,0 +1,13 @@
+# Never bake secrets into the Docker image
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Dev artifacts
+.git
+.gitignore
+*.md

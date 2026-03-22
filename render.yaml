@@ -1,0 +1,20 @@
+# ============================================================
+#  Render Blueprint — Voice Assistant Backend
+#  Docs: https://render.com/docs/blueprint-spec
+# ============================================================
+
+services:
+  - type: web
+    name: voice-assistant-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    region: oregon        # closest to most users; change to 'frankfurt' or 'singapore' if needed
+    plan: free            # upgrade to 'starter' to avoid cold-start sleep
+
+    # Health check — Render pings this to know the service is up
+    healthCheckPath: /health
+
+    # Environment variables — set secret values in the Render dashboard
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false       # ← means Render will ask you to fill this in manually (never committed to git)
