@@ -35,9 +35,11 @@ SAMPLE_RATE    = 16000
 BITS_PER_SAMPLE = 16
 CHANNELS       = 1
 
-# A2DP playback format (44100Hz stereo for Bluetooth)
-BT_SAMPLE_RATE = 44100
-BT_CHANNELS    = 2
+# Audio output format sent to ESP32 (must match btAudioCallback upsampler)
+# 8kHz mono 16-bit PCM = 16000 bytes/sec → ~3 sec of audio in 48KB
+# ESP32 btAudioCallback upsamples this to 44100Hz stereo for A2DP.
+BT_SAMPLE_RATE = 8000
+BT_CHANNELS    = 1
 
 # LLM system prompt — customize your assistant's personality!
 SYSTEM_PROMPT = """You are Jarvis, a helpful and witty AI voice assistant. 
@@ -218,8 +220,10 @@ async def process_audio(websocket: WebSocket, audio_data: bytearray):
         # ── Step 4: Send audio back to ESP32 ─────────────────────
         await websocket.send_text("AUDIO_START")
 
-        # Send in chunks to avoid overwhelming the ESP32
-        chunk_size = 4096
+        # Send in small 512-byte chunks.
+        # Larger chunks need more contiguous heap in the ESP32's SSL RX path
+        # and were causing the WebSocket to crash with only 18KB free.
+        chunk_size = 512
         for i in range(0, len(pcm_audio), chunk_size):
             chunk = pcm_audio[i:i + chunk_size]
             await websocket.send_bytes(chunk)
